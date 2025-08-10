@@ -22,7 +22,7 @@ A fully self-contained, customizable browser start page that runs entirely from 
 ### 1. Clone the repository
 ```bash
 git clone https://github.com/simulacra10/start.git
-cd local-start
+cd start
 ```
 
 ### 2. Open the file
