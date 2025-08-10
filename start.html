@@ -1,0 +1,360 @@
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>My Start Page</title>
+<style>
+  :root{
+    --bg: #0f1115;
+    --card: #171a21;
+    --text: #e6e6e6;
+    --muted:#9aa3b2;
+    --accent:#4aa3ff;
+    --accent-2:#6effb5;
+    --danger:#ff6b6b;
+    --ok:#79ffa1;
+    --ring: rgba(74,163,255,.35);
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#1b1f27;
+      --muted:#5b6577;
+      --accent:#0a84ff;
+      --accent-2:#05a660;
+      --danger:#e63946;
+      --ok:#0ca678;
+      --ring: rgba(10,132,255,.25);
+    }
+  }
+  * {box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+    background: var(--bg);
+    color: var(--text);
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:28px}
+  header{
+    display:flex; flex-wrap:wrap; align-items:center; gap:16px; justify-content:space-between; margin-bottom:18px;
+  }
+  .title{font-weight:700; letter-spacing:.2px; font-size:22px}
+  .clock{font-variant-numeric: tabular-nums; color:var(--muted)}
+  .search-bar{
+    display:flex; gap:10px; align-items:center; background:var(--card); border:1px solid transparent;
+    padding:12px; border-radius:12px; box-shadow: 0 6px 20px rgba(0,0,0,.18);
+  }
+  .search-bar:focus-within{outline: none; border-color: var(--ring); box-shadow: 0 0 0 4px var(--ring);}
+  select, input[type="text"], button{
+    font:inherit; color:inherit; background:transparent; border:1px solid #2a2f3a;
+    padding:10px 12px; border-radius:10px;
+  }
+  select{background:var(--card)}
+  input[type="text"]{flex:1; background:var(--bg); border:none; padding:10px 14px; border-radius:8px}
+  input[type="text"]::placeholder{color:var(--muted)}
+  .btn{cursor:pointer; border:1px solid #2a2f3a; background:var(--card)}
+  .btn:hover{border-color:#3a4150}
+  .btn.primary{background: linear-gradient(135deg, var(--accent), var(--accent-2)); color:#06121a; border:none}
+  .toolbar{display:flex; gap:10px; flex-wrap:wrap; margin:16px 0 12px}
+  .note{color:var(--muted); font-size:13px}
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap:14px;
+  }
+  .tile{
+    background:var(--card);
+    border:1px solid #202632;
+    border-radius:12px;
+    padding:14px;
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    position:relative;
+    min-height:72px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.15);
+  }
+  .tile[draggable="true"]{cursor:grab}
+  .tile:active{cursor:grabbing}
+  .tile .badge{
+    width:36px; height:36px; border-radius:10px;
+    display:grid; place-items:center;
+    font-weight:700; background:#0c1018; border:1px solid #252b38;
+  }
+  .tile a{
+    color:var(--text); text-decoration:none; font-weight:600;
+  }
+  .tile .host{display:block; color:var(--muted); font-size:12px; margin-top:4px; word-break:break-all}
+  .tile .actions{
+    position:absolute; right:10px; top:10px; display:flex; gap:6px; opacity:0; transition:.2s ease;
+  }
+  .tile:hover .actions{opacity:1}
+  .pill{border:none; padding:6px 8px; font-size:12px; border-radius:8px; cursor:pointer; background:#0f1420; color:#cbd3e1; border:1px solid #273042}
+  .pill.danger{color:#ffdfe1; border-color:#3a2430; background:#1a0f14}
+  .pill.ok{color:#d9ffea; border-color:#123426; background:#0e1512}
+  .footer{margin-top:18px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap}
+  .hidden{display:none !important}
+  .importer{display:flex; gap:8px; flex-wrap:wrap}
+  input[type="file"]{display:none}
+  label.file{border:1px dashed #3a4150; padding:10px 12px; border-radius:10px; cursor:pointer}
+  .mode{user-select:none}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">✨ My Start Page</div>
+      <div class="clock" id="clock">--:--</div>
+    </header>
+
+    <form class="search-bar" id="searchForm">
+      <select id="engineSelect" aria-label="Search engine"></select>
+      <input id="q" type="text" placeholder="Search the web…" autocomplete="off" />
+      <button class="btn primary" type="submit">Search</button>
+    </form>
+
+    <div class="toolbar">
+      <button class="btn" id="addBtn" title="Add a new link">＋ Add Link</button>
+      <button class="btn" id="reorderBtn" title="Drag cards to reorder">⤴ Reorder</button>
+      <button class="btn" id="exportBtn" title="Export your links as JSON">⇩ Export</button>
+      <label for="importFile" class="file" title="Import links from JSON">⇧ Import</label>
+      <input id="importFile" type="file" accept="application/json" />
+      <button class="btn" id="resetBtn" title="Reset to defaults">⟲ Reset</button>
+      <span class="note mode" id="modeNote">View mode</span>
+    </div>
+
+    <section class="grid" id="grid" aria-live="polite"></section>
+
+    <div class="footer">
+      <span class="note">Tips: Middle‑click to open in a new tab. Toggle “Reorder”, then drag tiles to rearrange.</span>
+      <span class="note">All data is saved locally in your browser (no internet needed).</span>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const storageKey = 'customLinks.v1';
+  const engineKey  = 'customEngine.v1';
+  const defaults = [
+    { title:'Gmail', url:'https://mail.google.com' },
+    { title:'Calendar', url:'https://calendar.google.com' },
+    { title:'Drive', url:'https://drive.google.com' },
+    { title:'YouTube', url:'https://youtube.com' },
+    { title:'Wikipedia', url:'https://wikipedia.org' },
+    { title:'News', url:'https://news.google.com' },
+    { title:'GitHub', url:'https://github.com' },
+  ];
+  const engines = [
+    { name:'DuckDuckGo', tpl:'https://duckduckgo.com/?q={q}' },
+    { name:'Google',     tpl:'https://www.google.com/search?q={q}' },
+    { name:'Brave',      tpl:'https://search.brave.com/search?q={q}' },
+    { name:'Startpage',  tpl:'https://www.startpage.com/do/search?q={q}' },
+    { name:'Wikipedia',  tpl:'https://en.wikipedia.org/w/index.php?search={q}' },
+    { name:'YouTube',    tpl:'https://www.youtube.com/results?search_query={q}' },
+    { name:'MDN',        tpl:'https://developer.mozilla.org/search?q={q}' }
+  ];
+
+  const $ = s => document.querySelector(s);
+  const grid = $('#grid');
+  const addBtn = $('#addBtn');
+  const exportBtn = $('#exportBtn');
+  const importFile = $('#importFile');
+  const resetBtn = $('#resetBtn');
+  const reorderBtn = $('#reorderBtn');
+  const engineSelect = $('#engineSelect');
+  const searchForm = $('#searchForm');
+  const q = $('#q');
+  const modeNote = $('#modeNote');
+
+  let links = loadLinks();
+  let reorderMode = false;
+
+  // Clock
+  const clockEl = $('#clock');
+  setInterval(() => {
+    const n = new Date();
+    const ds = n.toLocaleString(undefined, {
+      weekday:'short', month:'short', day:'2-digit',
+      hour:'2-digit', minute:'2-digit'
+    });
+    clockEl.textContent = ds;
+  }, 1000);
+
+  // Engines
+  engines.forEach((e,i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = e.name;
+    engineSelect.appendChild(opt);
+  });
+  const savedEngine = +localStorage.getItem(engineKey);
+  engineSelect.value = isNaN(savedEngine) ? 0 : savedEngine;
+  engineSelect.addEventListener('change', () => {
+    localStorage.setItem(engineKey, engineSelect.value);
+  });
+
+  searchForm.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const engine = engines[+engineSelect.value] || engines[0];
+    const url = engine.tpl.replace('{q}', encodeURIComponent(q.value.trim()));
+    if (!q.value.trim()) { q.focus(); return; }
+    window.location.href = url;
+  });
+
+  function loadLinks(){
+    try{
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return defaults.slice();
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) throw 0;
+      return arr;
+    }catch{ return defaults.slice(); }
+  }
+  function saveLinks(){ localStorage.setItem(storageKey, JSON.stringify(links)); }
+  function hostOf(url){
+    try { return new URL(url).host; } catch{ return ''; }
+  }
+  function badgeText(title){
+    if (!title) return '•';
+    return title.split(/\s+/).slice(0,2).map(w => w[0]?.toUpperCase()).join('').substring(0,3);
+  }
+  function makeTile(item, idx){
+    const li = document.createElement('div');
+    li.className = 'tile';
+    li.setAttribute('role','listitem');
+    li.draggable = reorderMode;
+
+    li.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', String(idx));
+    });
+    li.addEventListener('dragover', e => {
+      if (!reorderMode) return;
+      e.preventDefault();
+    });
+    li.addEventListener('drop', e => {
+      if (!reorderMode) return;
+      e.preventDefault();
+      const from = +e.dataTransfer.getData('text/plain');
+      const to = idx;
+      if (isNaN(from) || from === to) return;
+      const moved = links.splice(from,1)[0];
+      links.splice(to,0,moved);
+      saveLinks();
+      render();
+    });
+
+    const badge = document.createElement('div');
+    badge.className = 'badge';
+    badge.textContent = badgeText(item.title);
+
+    const meta = document.createElement('div');
+    meta.innerHTML = `<a href="${item.url}" rel="noopener">${item.title}</a><span class="host">${hostOf(item.url)}</span>`;
+
+    const actions = document.createElement('div');
+    actions.className = 'actions' + (reorderMode ? ' hidden' : '');
+    actions.appendChild(btn('Edit', 'pill ok', () => editLink(idx)));
+    actions.appendChild(btn('Delete', 'pill danger', () => removeLink(idx)));
+
+    li.appendChild(badge);
+    li.appendChild(meta);
+    li.appendChild(actions);
+    return li;
+  }
+  function btn(label, cls, onClick){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = cls;
+    b.textContent = label;
+    b.addEventListener('click', onClick);
+    return b;
+  }
+  function render(){
+    grid.innerHTML = '';
+    grid.setAttribute('role','list');
+    links.forEach((item, idx) => grid.appendChild(makeTile(item, idx)));
+    modeNote.textContent = reorderMode ? 'Reorder mode: drag tiles' : 'View mode';
+    reorderBtn.textContent = reorderMode ? '✔ Done Reordering' : '⤴ Reorder';
+  }
+  function addLink(){
+    const title = prompt('Title for the link?');
+    if (!title) return;
+    const url = prompt('URL (include http/https):');
+    if (!url) return;
+    try{
+      new URL(url);
+      links.push({ title, url });
+      saveLinks(); render();
+    }catch{
+      alert('That URL looks invalid. Please include http:// or https://');
+    }
+  }
+  function editLink(i){
+    const cur = links[i];
+    const title = prompt('Edit title:', cur.title);
+    if (!title) return;
+    const url = prompt('Edit URL:', cur.url);
+    if (!url) return;
+    try{
+      new URL(url);
+      links[i] = { title, url };
+      saveLinks(); render();
+    }catch{
+      alert('That URL looks invalid. Please include http:// or https://');
+    }
+  }
+  function removeLink(i){
+    if (!confirm('Delete this link?')) return;
+    links.splice(i,1);
+    saveLinks(); render();
+  }
+  function exportLinks(){
+    const data = JSON.stringify(links, null, 2);
+    const blob = new Blob([data], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'startpage-links.json';
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }
+  function importLinks(file){
+    const fr = new FileReader();
+    fr.onload = () => {
+      try{
+        const arr = JSON.parse(fr.result);
+        if (!Array.isArray(arr)) throw 0;
+        links = arr;
+        saveLinks(); render();
+      }catch{
+        alert('Invalid file format.');
+      }
+    };
+    fr.readAsText(file);
+  }
+  function resetLinks(){
+    if (!confirm('Reset to the default set of links? This will overwrite your current list.')) return;
+    links = defaults.slice();
+    saveLinks(); render();
+  }
+
+  addBtn.addEventListener('click', addLink);
+  exportBtn.addEventListener('click', exportLinks);
+  importFile.addEventListener('change', e => {
+    const f = e.target.files?.[0];
+    if (f) importLinks(f);
+    importFile.value = '';
+  });
+  resetBtn.addEventListener('click', resetLinks);
+  reorderBtn.addEventListener('click', () => {
+    reorderMode = !reorderMode;
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
